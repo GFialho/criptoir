@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -19,6 +17,8 @@ import {
   ChevronLeft,
   FileText,
   AlertCircle,
+  Building2,
+  Sparkles,
 } from 'lucide-react'
 import { EXCHANGES, ExchangeId, parseCSV } from '@/lib/parsers'
 import { ParsedTransaction } from '@/lib/tax-engine/types'
@@ -39,7 +39,22 @@ function formatBRL(v: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 }
 
-const STEPS = ['Selecionar Exchange', 'Upload CSV', 'Pré-visualizar', 'Confirmar']
+const STEPS = [
+  { label: 'Selecionar Exchange', desc: 'Escolha de onde importar' },
+  { label: 'Upload do CSV', desc: 'Envie o arquivo exportado' },
+  { label: 'Pré-visualizar', desc: 'Confira os dados' },
+  { label: 'Concluído', desc: 'Importação finalizada' },
+]
+
+// Exchange color/icon mapping
+const EXCHANGE_META: Record<string, { color: string; letter: string }> = {
+  binance: { color: 'bg-amber-100 text-amber-700 border-amber-200', letter: 'B' },
+  mercadobitcoin: { color: 'bg-indigo-100 text-indigo-700 border-indigo-200', letter: 'MB' },
+  foxbit: { color: 'bg-orange-100 text-orange-700 border-orange-200', letter: 'F' },
+  novadax: { color: 'bg-violet-100 text-violet-700 border-violet-200', letter: 'N' },
+  bitget: { color: 'bg-cyan-100 text-cyan-700 border-cyan-200', letter: 'BG' },
+  generic: { color: 'bg-slate-100 text-slate-700 border-slate-200', letter: 'G' },
+}
 
 export default function ImportarPage() {
   const [step, setStep] = useState(0)
@@ -87,45 +102,45 @@ export default function ImportarPage() {
   )
 
   const handleConfirm = () => {
-    // Em produção: salvar no banco de dados
     setImported(true)
     setStep(3)
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Importar Transações</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-slate-900">Importar Transações</h1>
+        <p className="text-slate-500 mt-1">
           Importe o histórico de operações da sua exchange favorita
         </p>
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center gap-2">
-        {STEPS.map((label, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                i < step
-                  ? 'bg-primary text-primary-foreground'
-                  : i === step
-                  ? 'border-2 border-primary text-primary'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {i < step ? <CheckCircle className="h-4 w-4" /> : i + 1}
+      <div className="flex items-center gap-0">
+        {STEPS.map((s, i) => (
+          <div key={i} className="flex items-center flex-1 last:flex-none">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all ${
+                  i < step
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : i === step
+                    ? 'bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100'
+                    : 'bg-slate-100 text-slate-400'
+                }`}
+              >
+                {i < step ? <CheckCircle className="h-4 w-4" /> : i + 1}
+              </div>
+              <div className="hidden sm:block">
+                <p className={`text-sm font-semibold ${i === step ? 'text-slate-900' : i < step ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {s.label}
+                </p>
+                <p className="text-xs text-slate-400">{s.desc}</p>
+              </div>
             </div>
-            <span
-              className={`hidden text-sm sm:block ${
-                i === step ? 'font-medium text-foreground' : 'text-muted-foreground'
-              }`}
-            >
-              {label}
-            </span>
             {i < STEPS.length - 1 && (
-              <ChevronRight className="mx-1 h-4 w-4 text-muted-foreground/50" />
+              <div className={`flex-1 mx-3 h-0.5 rounded-full ${i < step ? 'bg-emerald-300' : 'bg-slate-200'}`} />
             )}
           </div>
         ))}
@@ -133,226 +148,278 @@ export default function ImportarPage() {
 
       {/* Step 0: Select Exchange */}
       {step === 0 && (
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle>Selecione sua Exchange</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {EXCHANGES.map((ex) => (
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">Selecione sua Exchange</h2>
+          <p className="text-sm text-slate-500 mb-6">
+            Cada exchange tem um formato de CSV diferente. Selecione corretamente para garantir a precisão dos dados.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {EXCHANGES.map((ex) => {
+              const meta = EXCHANGE_META[ex.id] ?? { color: 'bg-slate-100 text-slate-700 border-slate-200', letter: ex.name[0] }
+              return (
                 <button
                   key={ex.id}
                   onClick={() => setSelectedExchange(ex.id)}
-                  className={`rounded-xl border p-4 text-left transition-all hover:border-primary/50 ${
+                  className={`relative rounded-2xl border-2 p-5 text-left transition-all hover:shadow-md ${
                     selectedExchange === ex.id
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 bg-background'
+                      ? 'border-indigo-600 bg-indigo-50 shadow-md'
+                      : 'border-slate-200 bg-white hover:border-indigo-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{ex.name}</span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold ${meta.color}`}>
+                        {meta.letter}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{ex.name}</p>
+                        {ex.csvFormat && (
+                          <p className="mt-0.5 text-xs text-slate-400 font-mono truncate max-w-[120px]">{ex.csvFormat}</p>
+                        )}
+                      </div>
+                    </div>
                     {selectedExchange === ex.id && (
-                      <CheckCircle className="h-4 w-4 text-primary" />
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600">
+                        <CheckCircle className="h-4 w-4 text-white" />
+                      </div>
                     )}
                   </div>
-                  {ex.csvFormat && (
-                    <p className="mt-1 text-xs text-muted-foreground font-mono truncate">{ex.csvFormat}</p>
-                  )}
                 </button>
-              ))}
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button
-                disabled={!selectedExchange}
-                onClick={() => setStep(1)}
-                className="gap-2 bg-primary text-primary-foreground"
-              >
-                Próximo
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              )
+            })}
+          </div>
+          <div className="mt-8 flex justify-end">
+            <Button
+              disabled={!selectedExchange}
+              onClick={() => setStep(1)}
+              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 disabled:opacity-40"
+            >
+              Próximo passo
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Step 1: Upload CSV */}
       {step === 1 && (
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Upload do CSV
-              <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                {error}
-              </div>
-            )}
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-lg font-bold text-slate-900">Upload do arquivo CSV</h2>
+            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+              {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
+            </span>
+          </div>
 
-            {/* Drop zone */}
-            <div
-              onDrop={handleDrop}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-              onDragLeave={() => setIsDragging(false)}
-              className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 transition-colors ${
-                isDragging
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border/50 hover:border-primary/50 hover:bg-muted/20'
-              }`}
+          {error && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600" />
+              <p className="text-sm text-rose-700">{error}</p>
+            </div>
+          )}
+
+          {/* Drop zone */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+            onDragLeave={() => setIsDragging(false)}
+            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-16 transition-all cursor-pointer ${
+              isDragging
+                ? 'border-indigo-500 bg-indigo-50 scale-[1.01]'
+                : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+            }`}
+          >
+            <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${isDragging ? 'bg-indigo-100' : 'bg-slate-100'}`}>
+              <Upload className={`h-8 w-8 ${isDragging ? 'text-indigo-600' : 'text-slate-400'}`} />
+            </div>
+            <p className="mb-1 text-lg font-semibold text-slate-700">
+              {isDragging ? 'Solte o arquivo aqui!' : 'Arraste o arquivo CSV aqui'}
+            </p>
+            <p className="text-sm text-slate-400">ou <span className="text-indigo-600 font-medium">clique para selecionar</span></p>
+            <p className="mt-3 text-xs text-slate-400">Apenas arquivos .csv são aceitos</p>
+            <input
+              type="file"
+              accept=".csv"
+              className="absolute inset-0 cursor-pointer opacity-0"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleFile(file)
+              }}
+            />
+          </div>
+
+          {fileName && (
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+                <FileText className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-emerald-800 text-sm">{fileName}</p>
+                <p className="text-xs text-emerald-600">Arquivo carregado com sucesso</p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setStep(0)}
+              className="gap-2 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
             >
-              <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
-              <p className="mb-1 font-medium">Arraste o arquivo CSV aqui</p>
-              <p className="text-sm text-muted-foreground">ou clique para selecionar</p>
-              <input
-                type="file"
-                accept=".csv"
-                className="absolute inset-0 cursor-pointer opacity-0"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleFile(file)
-                }}
-              />
-            </div>
-
-            {fileName && (
-              <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-muted/20 p-3 text-sm">
-                <FileText className="h-4 w-4 text-primary" />
-                <span className="font-medium">{fileName}</span>
-              </div>
-            )}
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(0)} className="gap-2">
-                <ChevronLeft className="h-4 w-4" />
-                Voltar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <ChevronLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Step 2: Preview */}
       {step === 2 && (
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Pré-visualização — {transactions.length} transações</span>
-              <Badge className="bg-primary/10 text-primary border-primary/30">
-                {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="overflow-x-auto rounded-lg border border-border/50">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead>Data</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Ativo</TableHead>
-                    <TableHead className="text-right">Quantidade</TableHead>
-                    <TableHead className="text-right">Preço (R$)</TableHead>
-                    <TableHead className="text-right">Total (R$)</TableHead>
-                    <TableHead className="text-right">Taxa</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.slice(0, 20).map((tx, i) => (
-                    <TableRow key={i} className="border-border/50">
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {format(tx.date, 'dd/MM/yyyy', { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            tx.type === 'sell'
-                              ? 'border-red-500/30 text-red-400'
-                              : 'border-emerald-500/30 text-emerald-400'
-                          }`}
-                        >
-                          {TYPE_LABELS[tx.type] ?? tx.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{tx.asset}</span>
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-mono">
-                        {tx.amount.toFixed(6)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {formatBRL(tx.priceBRL)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-semibold">
-                        {formatBRL(tx.totalBRL)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {tx.fee.toFixed(4)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            {transactions.length > 20 && (
-              <p className="text-center text-sm text-muted-foreground">
-                Mostrando 20 de {transactions.length} transações
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-100 p-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Pré-visualização
+              </h2>
+              <p className="text-sm text-slate-500 mt-0.5">
+                <span className="font-semibold text-slate-700">{transactions.length} transações</span> encontradas de{' '}
+                <span className="font-semibold text-indigo-600">
+                  {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
+                </span>
               </p>
-            )}
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)} className="gap-2">
-                <ChevronLeft className="h-4 w-4" />
-                Voltar
-              </Button>
-              <Button onClick={handleConfirm} className="gap-2 bg-primary text-primary-foreground">
-                Confirmar Importação
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2 rounded-xl bg-indigo-50 px-3 py-2">
+              <Building2 className="h-4 w-4 text-indigo-600" />
+              <span className="text-sm font-medium text-indigo-700">
+                {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-slate-100 bg-slate-50">
+                  <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tipo</TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ativo</TableHead>
+                  <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Quantidade</TableHead>
+                  <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Preço (R$)</TableHead>
+                  <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Total (R$)</TableHead>
+                  <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Taxa</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.slice(0, 20).map((tx, i) => (
+                  <TableRow
+                    key={i}
+                    className={`border-slate-100 transition-colors ${i < 3 ? 'bg-indigo-50/50 hover:bg-indigo-50' : 'hover:bg-slate-50'}`}
+                  >
+                    <TableCell className="text-sm text-slate-500 whitespace-nowrap">
+                      {format(tx.date, 'dd/MM/yyyy', { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          tx.type === 'sell'
+                            ? 'bg-rose-100 text-rose-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                        }`}
+                      >
+                        {TYPE_LABELS[tx.type] ?? tx.type}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm font-bold text-slate-700">{tx.asset}</span>
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-mono text-slate-700">
+                      {tx.amount.toFixed(6)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-slate-700">
+                      {formatBRL(tx.priceBRL)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-bold text-slate-900">
+                      {formatBRL(tx.totalBRL)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-slate-400">
+                      {tx.fee.toFixed(4)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {transactions.length > 20 && (
+            <div className="border-t border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-500">
+              Mostrando 20 de <strong>{transactions.length}</strong> transações — todas serão importadas
+            </div>
+          )}
+
+          <div className="flex justify-between border-t border-slate-100 p-6">
+            <Button
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="gap-2 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6"
+            >
+              Confirmar Importação
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* Step 3: Confirmed */}
+      {/* Step 3: Success */}
       {step === 3 && imported && (
-        <Card className="border-border/50 bg-card/50">
-          <CardContent className="flex flex-col items-center gap-4 py-16">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle className="h-8 w-8 text-emerald-400" />
-            </div>
-            <h2 className="text-xl font-bold">Importação concluída!</h2>
-            <p className="text-center text-muted-foreground">
-              <strong className="text-foreground">{transactions.length} transações</strong> importadas
-              com sucesso da <strong className="text-foreground">
-                {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
-              </strong>.
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStep(0)
-                  setSelectedExchange(null)
-                  setFileName(null)
-                  setTransactions([])
-                  setImported(false)
-                }}
-              >
-                Importar mais
+        <div className="rounded-2xl border border-emerald-200 bg-white p-16 shadow-sm text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+            <Sparkles className="h-10 w-10 text-emerald-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Importação concluída!</h2>
+          <p className="text-slate-500 mb-8 max-w-md mx-auto">
+            <strong className="text-slate-900">{transactions.length} transações</strong> importadas
+            com sucesso da{' '}
+            <strong className="text-indigo-600">
+              {EXCHANGES.find((e) => e.id === selectedExchange)?.name}
+            </strong>.
+            {' '}O motor fiscal PEPS já está calculando seus ganhos.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStep(0)
+                setSelectedExchange(null)
+                setFileName(null)
+                setTransactions([])
+                setImported(false)
+              }}
+              className="rounded-xl border-slate-200 gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Importar mais
+            </Button>
+            <a href="/dashboard/transacoes">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl gap-2">
+                <FileText className="h-4 w-4" />
+                Ver transações
               </Button>
-              <a href="/dashboard/transacoes">
-                <Button className="bg-primary text-primary-foreground">
-                  Ver transações
-                </Button>
-              </a>
-            </div>
-          </CardContent>
-        </Card>
+            </a>
+            <a href="/dashboard/relatorio">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Ver relatório IRPF
+              </Button>
+            </a>
+          </div>
+        </div>
       )}
     </div>
   )

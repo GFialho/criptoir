@@ -1,14 +1,15 @@
+'use client'
+
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { CheckCircle, X, ArrowLeft } from 'lucide-react'
+import { CheckCircle, X, ArrowLeft, Zap, Shield, HeadphonesIcon } from 'lucide-react'
 
 interface Plan {
   name: string
-  price: string
-  period: string
+  priceMonthly: number
+  priceAnnual: number
   description: string
   features: string[]
   notIncluded?: string[]
@@ -16,13 +17,15 @@ interface Plan {
   href: string
   highlighted: boolean
   badge?: string
+  color: string
+  badgeColor: string
 }
 
 const plans: Plan[] = [
   {
     name: 'Grátis',
-    price: 'R$0',
-    period: 'para sempre',
+    priceMonthly: 0,
+    priceAnnual: 0,
     description: 'Para começar e experimentar a plataforma',
     features: [
       'Até 50 transações',
@@ -40,11 +43,13 @@ const plans: Plan[] = [
     cta: 'Começar Grátis',
     href: '/dashboard',
     highlighted: false,
+    color: 'border-slate-200 bg-white',
+    badgeColor: '',
   },
   {
     name: 'Básico',
-    price: 'R$99',
-    period: '/ano',
+    priceMonthly: 12,
+    priceAnnual: 99,
     description: 'Para o investidor casual com poucas operações',
     features: [
       'Até 500 transações',
@@ -63,11 +68,13 @@ const plans: Plan[] = [
     cta: 'Assinar Básico',
     href: '/dashboard',
     highlighted: false,
+    color: 'border-slate-200 bg-white',
+    badgeColor: '',
   },
   {
     name: 'Pro',
-    price: 'R$249',
-    period: '/ano',
+    priceMonthly: 29,
+    priceAnnual: 249,
     description: 'Para traders ativos e investidores sérios',
     features: [
       'Transações ilimitadas',
@@ -84,11 +91,13 @@ const plans: Plan[] = [
     href: '/dashboard',
     highlighted: true,
     badge: 'Mais popular',
+    color: 'border-indigo-600 bg-indigo-600',
+    badgeColor: 'bg-amber-400 text-amber-900',
   },
   {
     name: 'Contador',
-    price: 'R$499',
-    period: '/ano',
+    priceMonthly: 59,
+    priceAnnual: 499,
     description: 'Para contadores e escritórios de contabilidade',
     features: [
       'Tudo do Pro',
@@ -97,12 +106,14 @@ const plans: Plan[] = [
       'Relatórios customizados',
       'White-label opcional',
       'Acesso API completo',
-      'Suporte dedicado (WhatsApp)',
+      'Suporte WhatsApp dedicado',
       'DeCripto 2026 incluso',
     ],
     cta: 'Falar com Vendas',
     href: 'mailto:vendas@criptoir.com.br',
     highlighted: false,
+    color: 'border-violet-200 bg-violet-50',
+    badgeColor: '',
   },
 ]
 
@@ -122,33 +133,42 @@ const comparisonRows = [
   { feature: 'DeCripto 2026', values: [false, false, false, true] },
 ]
 
-function CellValue({ val }: { val: string | boolean }) {
-  if (val === true) return <CheckCircle className="mx-auto h-5 w-5 text-emerald-400" />
-  if (val === false) return <X className="mx-auto h-5 w-5 text-muted-foreground/40" />
-  return <span className="text-sm font-medium">{val}</span>
+function CellValue({ val, highlighted }: { val: string | boolean; highlighted: boolean }) {
+  if (val === true) return <CheckCircle className={`mx-auto h-5 w-5 ${highlighted ? 'text-emerald-300' : 'text-emerald-500'}`} />
+  if (val === false) return <X className={`mx-auto h-5 w-5 ${highlighted ? 'text-indigo-400' : 'text-slate-200'}`} />
+  return (
+    <span className={`text-sm font-semibold ${highlighted ? 'text-white' : 'text-slate-700'}`}>
+      {val}
+    </span>
+  )
 }
 
 export default function PrecosPage() {
+  const [annual, setAnnual] = useState(true)
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors"
+            >
               <ArrowLeft className="h-4 w-4" />
-              Voltar
+              <span className="text-sm">Voltar</span>
             </Link>
-            <Separator orientation="vertical" className="h-5" />
+            <Separator orientation="vertical" className="h-5 bg-slate-200" />
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold text-xs">
                 ₿
               </div>
-              <span className="font-bold">CriptoIR</span>
+              <span className="font-bold text-slate-900">CriptoIR</span>
             </div>
           </div>
           <Link href="/dashboard">
-            <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5">
               Começar Grátis
             </Button>
           </Link>
@@ -158,86 +178,161 @@ export default function PrecosPage() {
       <div className="mx-auto max-w-6xl px-4 py-16 space-y-20">
         {/* Header */}
         <div className="text-center">
-          <Badge className="mb-4 border-primary/30 bg-primary/10 text-primary">Preços simples</Badge>
-          <h1 className="text-4xl font-bold mb-4">Planos para todo tipo de investidor</h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 mb-6">
+            Preços simples e transparentes
+          </div>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Planos para todo tipo de investidor
+          </h1>
+          <p className="text-lg text-slate-500 max-w-xl mx-auto mb-8">
             Sem surpresas, sem taxas ocultas. Cancele quando quiser.
           </p>
+
+          {/* Billing toggle */}
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-1.5">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                !annual ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Mensal
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all flex items-center gap-2 ${
+                annual ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Anual
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                -30%
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Plan cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => (
-            <Card
-              key={plan.name}
-              className={`relative flex flex-col border ${
-                plan.highlighted
-                  ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10'
-                  : 'border-border/50 bg-card/50'
-              }`}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground">{plan.badge}</Badge>
+          {plans.map((plan) => {
+            const price = annual ? plan.priceAnnual : plan.priceMonthly
+            const isHighlighted = plan.highlighted
+            return (
+              <div
+                key={plan.name}
+                className={`relative flex flex-col rounded-2xl border-2 p-6 transition-all ${
+                  isHighlighted
+                    ? 'border-indigo-600 bg-indigo-600 shadow-xl shadow-indigo-200'
+                    : plan.name === 'Contador'
+                    ? 'border-violet-200 bg-violet-50 shadow-sm'
+                    : 'border-slate-200 bg-white shadow-sm hover:shadow-md'
+                }`}
+              >
+                {plan.badge && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold shadow-sm ${plan.badgeColor}`}>
+                      ⭐ {plan.badge}
+                    </span>
+                  </div>
+                )}
+
+                <div className="mb-5">
+                  <h3 className={`text-lg font-bold ${isHighlighted ? 'text-white' : 'text-slate-900'}`}>
+                    {plan.name}
+                  </h3>
+                  <p className={`text-sm mt-1 ${isHighlighted ? 'text-indigo-200' : 'text-slate-400'}`}>
+                    {plan.description}
+                  </p>
+
+                  <div className="mt-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-4xl font-bold ${isHighlighted ? 'text-white' : 'text-slate-900'}`}>
+                        {price === 0 ? 'Grátis' : `R$${price}`}
+                      </span>
+                      {price > 0 && (
+                        <span className={`text-sm ${isHighlighted ? 'text-indigo-200' : 'text-slate-400'}`}>
+                          /{annual ? 'ano' : 'mês'}
+                        </span>
+                      )}
+                    </div>
+                    {annual && price > 0 && (
+                      <p className={`text-xs mt-1 ${isHighlighted ? 'text-indigo-200' : 'text-slate-400'}`}>
+                        R${(price / 12).toFixed(0)}/mês cobrado anualmente
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-lg">{plan.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">{plan.description}</p>
-                <div className="flex items-baseline gap-1 pt-2">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground text-sm">{plan.period}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col gap-4">
-                <ul className="flex-1 space-y-2">
+
+                <ul className="flex-1 space-y-2.5 mb-6">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                    <li key={f} className={`flex items-start gap-2 text-sm ${isHighlighted ? 'text-indigo-100' : 'text-slate-600'}`}>
+                      <CheckCircle className={`mt-0.5 h-4 w-4 flex-shrink-0 ${isHighlighted ? 'text-emerald-300' : 'text-indigo-600'}`} />
                       {f}
                     </li>
                   ))}
                   {plan.notIncluded?.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground/50">
+                    <li key={f} className={`flex items-start gap-2 text-sm ${isHighlighted ? 'text-indigo-400' : 'text-slate-300'}`}>
                       <X className="mt-0.5 h-4 w-4 flex-shrink-0" />
                       {f}
                     </li>
                   ))}
                 </ul>
+
                 <Link href={plan.href}>
                   <Button
-                    className="w-full"
-                    variant={plan.highlighted ? 'default' : 'outline'}
+                    className={`w-full rounded-xl font-semibold ${
+                      isHighlighted
+                        ? 'bg-white text-indigo-600 hover:bg-indigo-50'
+                        : plan.name === 'Contador'
+                        ? 'bg-violet-600 text-white hover:bg-violet-700'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
                   >
                     {plan.cta}
                   </Button>
                 </Link>
-              </CardContent>
-            </Card>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Trust badges */}
+        <div className="flex flex-wrap items-center justify-center gap-8">
+          {[
+            { icon: Shield, label: 'Pagamento 100% seguro' },
+            { icon: Zap, label: 'Ativação imediata' },
+            { icon: HeadphonesIcon, label: 'Suporte em português' },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-sm text-slate-500">
+              <item.icon className="h-5 w-5 text-indigo-600" />
+              {item.label}
+            </div>
           ))}
         </div>
 
         {/* Comparison table */}
         <div>
-          <h2 className="text-2xl font-bold text-center mb-8">Comparação detalhada</h2>
-          <Card className="border-border/50 bg-card/50 overflow-hidden">
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-8">Comparação detalhada</h2>
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="py-4 px-4 text-left text-muted-foreground font-medium w-[35%]">
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="py-4 px-5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 w-[35%]">
                       Funcionalidade
                     </th>
                     {plans.map((p) => (
                       <th
                         key={p.name}
-                        className={`py-4 px-4 text-center font-semibold ${
-                          p.highlighted ? 'text-primary' : 'text-foreground'
+                        className={`py-4 px-4 text-center font-bold ${
+                          p.highlighted
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-slate-900'
                         }`}
                       >
                         {p.name}
                         {p.highlighted && (
-                          <div className="text-xs font-normal text-primary/70">⭐ Mais popular</div>
+                          <div className="text-xs font-normal text-indigo-200 mt-0.5">⭐ Mais popular</div>
                         )}
                       </th>
                     ))}
@@ -247,30 +342,38 @@ export default function PrecosPage() {
                   {comparisonRows.map((row, i) => (
                     <tr
                       key={row.feature}
-                      className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-muted/5' : ''}`}
+                      className={`border-b border-slate-100 ${i % 2 === 0 ? 'bg-slate-50/50' : 'bg-white'}`}
                     >
-                      <td className="py-3 px-4 text-muted-foreground">{row.feature}</td>
+                      <td className="py-3.5 px-5 text-slate-600 text-sm">{row.feature}</td>
                       {row.values.map((val, j) => (
                         <td
                           key={j}
-                          className={`py-3 px-4 text-center ${
-                            plans[j].highlighted ? 'bg-primary/5' : ''
+                          className={`py-3.5 px-4 text-center ${
+                            plans[j].highlighted ? 'bg-indigo-600' : ''
                           }`}
                         >
-                          <CellValue val={val} />
+                          <CellValue val={val} highlighted={plans[j].highlighted} />
                         </td>
                       ))}
                     </tr>
                   ))}
-                  <tr>
-                    <td className="py-4 px-4" />
+                  <tr className="bg-white border-t border-slate-200">
+                    <td className="py-5 px-5" />
                     {plans.map((plan) => (
-                      <td key={plan.name} className={`py-4 px-4 text-center ${plan.highlighted ? 'bg-primary/5' : ''}`}>
+                      <td
+                        key={plan.name}
+                        className={`py-5 px-4 text-center ${plan.highlighted ? 'bg-indigo-600' : ''}`}
+                      >
                         <Link href={plan.href}>
                           <Button
                             size="sm"
-                            className="w-full"
-                            variant={plan.highlighted ? 'default' : 'outline'}
+                            className={`w-full rounded-xl ${
+                              plan.highlighted
+                                ? 'bg-white text-indigo-600 hover:bg-indigo-50'
+                                : plan.name === 'Contador'
+                                ? 'bg-violet-600 text-white hover:bg-violet-700'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            }`}
                           >
                             {plan.cta}
                           </Button>
@@ -281,12 +384,12 @@ export default function PrecosPage() {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* FAQ */}
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-bold text-center mb-8">Dúvidas sobre os planos</h2>
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-8">Dúvidas sobre os planos</h2>
           <div className="space-y-4">
             {[
               {
@@ -306,20 +409,21 @@ export default function PrecosPage() {
                 a: 'O plano Contador padrão suporta até 50 clientes. Para volumes maiores, entre em contato para um plano Enterprise.',
               },
             ].map((faq, i) => (
-              <Card key={i} className="border-border/50 bg-card/50">
-                <CardContent className="p-5">
-                  <p className="font-semibold mb-2">{faq.q}</p>
-                  <p className="text-sm text-muted-foreground">{faq.a}</p>
-                </CardContent>
-              </Card>
+              <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="font-semibold text-slate-900 mb-2">{faq.q}</p>
+                <p className="text-sm text-slate-500 leading-relaxed">{faq.a}</p>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 px-4 py-8 text-center text-sm text-muted-foreground">
-        <p>© 2026 CriptoIR. Todos os direitos reservados.</p>
+      <footer className="border-t border-slate-200 bg-slate-50 px-4 py-8 text-center">
+        <p className="text-sm text-slate-400">© 2026 CriptoIR. Todos os direitos reservados.</p>
+        <p className="text-xs text-slate-300 mt-1">
+          Preços sujeitos a alteração. Consulte os termos de uso.
+        </p>
       </footer>
     </div>
   )

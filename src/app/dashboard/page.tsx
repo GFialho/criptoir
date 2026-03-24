@@ -1,8 +1,6 @@
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -20,6 +18,9 @@ import {
   ArrowDownRight,
   BarChart3,
   FileText,
+  Bell,
+  Plus,
+  ChevronRight,
 } from 'lucide-react'
 import { mockTransactions, mockSummary, mockDARFs } from '@/lib/mock-data'
 import { format } from 'date-fns'
@@ -34,7 +35,7 @@ function formatBRL(value: number): string {
 
 const recentTransactions = [...mockTransactions]
   .sort((a, b) => b.date.getTime() - a.date.getTime())
-  .slice(0, 8)
+  .slice(0, 6)
 
 const TYPE_LABELS: Record<string, string> = {
   buy: 'Compra',
@@ -46,58 +47,44 @@ const TYPE_LABELS: Record<string, string> = {
   airdrop: 'Airdrop',
 }
 
+const ASSET_COLORS: Record<string, string> = {
+  BTC: 'bg-amber-100 text-amber-700',
+  ETH: 'bg-indigo-100 text-indigo-700',
+  SOL: 'bg-violet-100 text-violet-700',
+  USDT: 'bg-emerald-100 text-emerald-700',
+}
+
+const monthlyData = [
+  { month: 'Jan', gain: 0, exempt: true },
+  { month: 'Fev', gain: 0, exempt: true },
+  { month: 'Mar', gain: 8290, exempt: false },
+  { month: 'Abr', gain: 0, exempt: true },
+  { month: 'Mai', gain: 0, exempt: true },
+  { month: 'Jun', gain: 14580, exempt: false },
+  { month: 'Jul', gain: 0, exempt: true },
+  { month: 'Ago', gain: 0, exempt: true },
+  { month: 'Set', gain: 0, exempt: true },
+  { month: 'Out', gain: 36050, exempt: false },
+  { month: 'Nov', gain: 0, exempt: true },
+  { month: 'Dez', gain: 0, exempt: true },
+]
+
 export default function DashboardPage() {
   const { portfolioValueBRL, totalGainBRL, totalTaxOwedBRL, darfsPending } = mockSummary
   const isGain = totalGainBRL >= 0
 
-  const summaryCards = [
-    {
-      title: 'Valor do Portfólio',
-      value: formatBRL(portfolioValueBRL),
-      sub: 'Posição em 31/12/2025',
-      icon: DollarSign,
-      iconClass: 'text-blue-400',
-      bgClass: 'bg-blue-400/10',
-    },
-    {
-      title: 'Ganho/Perda Total',
-      value: formatBRL(totalGainBRL),
-      sub: 'Acumulado em 2025',
-      icon: isGain ? TrendingUp : TrendingDown,
-      iconClass: isGain ? 'text-emerald-400' : 'text-red-400',
-      bgClass: isGain ? 'bg-emerald-400/10' : 'bg-red-400/10',
-      valueClass: isGain ? 'text-emerald-400' : 'text-red-400',
-    },
-    {
-      title: 'Imposto Devido',
-      value: formatBRL(totalTaxOwedBRL),
-      sub: 'Ganho de capital 2025',
-      icon: FileText,
-      iconClass: 'text-amber-400',
-      bgClass: 'bg-amber-400/10',
-    },
-    {
-      title: 'DARFs Pendentes',
-      value: String(darfsPending),
-      sub: 'Aguardando pagamento',
-      icon: AlertTriangle,
-      iconClass: 'text-red-400',
-      bgClass: 'bg-red-400/10',
-      valueClass: darfsPending > 0 ? 'text-red-400' : undefined,
-    },
-  ]
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Resumo do seu portfólio de criptoativos — 2025</p>
+          <p className="text-sm text-slate-400 mb-1">Bem-vindo de volta,</p>
+          <h1 className="text-2xl font-bold text-slate-900">Gabriel 👋</h1>
+          <p className="text-slate-500 text-sm mt-1">Resumo do seu portfólio — ano 2025</p>
         </div>
         <Link href="/dashboard/importar">
-          <Button size="sm" className="gap-2 bg-primary text-primary-foreground">
-            <ArrowUpRight className="h-4 w-4" />
+          <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
+            <Plus className="h-4 w-4" />
             Importar transações
           </Button>
         </Link>
@@ -105,194 +92,270 @@ export default function DashboardPage() {
 
       {/* Alert */}
       {darfsPending > 0 && (
-        <Alert className="border-red-500/30 bg-red-500/10">
-          <AlertTriangle className="h-4 w-4 text-red-400" />
-          <AlertTitle className="text-red-400">DARFs pendentes</AlertTitle>
-          <AlertDescription className="text-muted-foreground">
-            Você tem <strong className="text-foreground">{darfsPending} DARFs</strong> aguardando pagamento.{' '}
-            <Link href="/dashboard/darf" className="text-primary underline underline-offset-4">
-              Ver DARFs →
-            </Link>
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-rose-100">
+            <Bell className="h-5 w-5 text-rose-600" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-rose-800">Atenção: DARFs pendentes</p>
+            <p className="text-sm text-rose-600">
+              Você tem <strong>{darfsPending} DARF{darfsPending > 1 ? 's' : ''}</strong> aguardando pagamento.
+              Evite multas e juros.
+            </p>
+          </div>
+          <Link href="/dashboard/darf">
+            <Button size="sm" className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl flex-shrink-0 gap-1">
+              Ver DARFs
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </Link>
+        </div>
       )}
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {summaryCards.map((card) => (
-          <Card key={card.title} className="border-border/50 bg-card/50">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{card.title}</p>
-                  <p className={`mt-1 text-2xl font-bold ${card.valueClass ?? 'text-foreground'}`}>
-                    {card.value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{card.sub}</p>
-                </div>
-                <div className={`rounded-lg p-2 ${card.bgClass}`}>
-                  <card.icon className={`h-5 w-5 ${card.iconClass}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {/* Portfolio */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-slate-500">Valor do Portfólio</p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50">
+              <DollarSign className="h-5 w-5 text-indigo-600" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-slate-900 font-mono">{formatBRL(portfolioValueBRL)}</p>
+          <p className="text-xs text-slate-400 mt-1">Posição em 31/12/2025</p>
+          <div className="mt-3 flex items-center gap-1 text-emerald-600">
+            <TrendingUp className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">+12.4% no ano</span>
+          </div>
+        </div>
+
+        {/* Gain/Loss */}
+        <div className={`rounded-2xl border p-6 shadow-sm ${isGain ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+          <div className="flex items-start justify-between mb-3">
+            <p className={`text-sm font-medium ${isGain ? 'text-emerald-700' : 'text-rose-700'}`}>Ganho/Perda Total</p>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isGain ? 'bg-emerald-100' : 'bg-rose-100'}`}>
+              {isGain ? (
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-rose-600" />
+              )}
+            </div>
+          </div>
+          <p className={`text-2xl font-bold font-mono ${isGain ? 'text-emerald-700' : 'text-rose-700'}`}>
+            {formatBRL(totalGainBRL)}
+          </p>
+          <p className={`text-xs mt-1 ${isGain ? 'text-emerald-600' : 'text-rose-500'}`}>Acumulado em 2025</p>
+          <div className={`mt-3 flex items-center gap-1 ${isGain ? 'text-emerald-600' : 'text-rose-500'}`}>
+            {isGain ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+            <span className="text-xs font-medium">{isGain ? 'Resultado positivo' : 'Resultado negativo'}</span>
+          </div>
+        </div>
+
+        {/* Tax owed */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-amber-700">Imposto Devido</p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+              <FileText className="h-5 w-5 text-amber-600" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-amber-700 font-mono">{formatBRL(totalTaxOwedBRL)}</p>
+          <p className="text-xs text-amber-600 mt-1">Ganho de capital 2025</p>
+          <div className="mt-3 flex items-center gap-1 text-amber-600">
+            <span className="text-xs font-medium">DARF código 4600</span>
+          </div>
+        </div>
+
+        {/* DARFs pending */}
+        <div className={`rounded-2xl border p-6 shadow-sm ${darfsPending > 0 ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-white'}`}>
+          <div className="flex items-start justify-between mb-3">
+            <p className={`text-sm font-medium ${darfsPending > 0 ? 'text-rose-700' : 'text-slate-500'}`}>DARFs Pendentes</p>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${darfsPending > 0 ? 'bg-rose-100' : 'bg-slate-50'}`}>
+              <AlertTriangle className={`h-5 w-5 ${darfsPending > 0 ? 'text-rose-600' : 'text-slate-400'}`} />
+            </div>
+          </div>
+          <p className={`text-2xl font-bold font-mono ${darfsPending > 0 ? 'text-rose-700' : 'text-slate-900'}`}>
+            {darfsPending}
+          </p>
+          <p className={`text-xs mt-1 ${darfsPending > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+            {darfsPending > 0 ? 'Aguardando pagamento' : 'Nenhum pendente'}
+          </p>
+          {darfsPending > 0 && (
+            <div className="mt-3">
+              <Link href="/dashboard/darf">
+                <span className="text-xs font-semibold text-rose-600 hover:text-rose-700 underline underline-offset-2">
+                  Pagar agora →
+                </span>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Chart Placeholder + DARFs */}
+      {/* Chart + DARFs */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Monthly Chart Placeholder */}
-        <Card className="col-span-2 border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              Ganho de Capital Mensal — 2025
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Visual bar chart placeholder */}
-            <div className="flex h-48 items-end gap-2">
-              {[
-                { month: 'Jan', gain: 0, exempt: true },
-                { month: 'Fev', gain: 0, exempt: true },
-                { month: 'Mar', gain: 8290, exempt: false },
-                { month: 'Abr', gain: 0, exempt: true },
-                { month: 'Mai', gain: 0, exempt: true },
-                { month: 'Jun', gain: 14580, exempt: false },
-                { month: 'Jul', gain: 0, exempt: true },
-                { month: 'Ago', gain: 0, exempt: true },
-                { month: 'Set', gain: 0, exempt: true },
-                { month: 'Out', gain: 36050, exempt: false },
-                { month: 'Nov', gain: 0, exempt: true },
-                { month: 'Dez', gain: 0, exempt: true },
-              ].map((item) => {
-                const maxGain = 36050
-                const heightPct = item.gain > 0 ? (item.gain / maxGain) * 100 : 4
-                return (
-                  <div key={item.month} className="flex flex-1 flex-col items-center gap-1">
+        {/* Monthly Chart */}
+        <div className="col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-indigo-600" />
+              <h3 className="font-semibold text-slate-900">Ganho de Capital Mensal — 2025</h3>
+            </div>
+            <Link href="/dashboard/relatorio">
+              <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs">
+                Ver relatório completo →
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex h-52 items-end gap-1.5">
+            {monthlyData.map((item) => {
+              const maxGain = 36050
+              const heightPct = item.gain > 0 ? Math.max((item.gain / maxGain) * 100, 8) : 6
+              return (
+                <div key={item.month} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className="w-full relative group" style={{ height: '180px', display: 'flex', alignItems: 'flex-end' }}>
                     <div
-                      className={`w-full rounded-t transition-all ${
-                        item.gain > 0 ? 'bg-primary/70' : 'bg-muted/40'
+                      className={`w-full rounded-t-lg transition-all ${
+                        item.gain > 0
+                          ? 'bg-indigo-500 hover:bg-indigo-400'
+                          : 'bg-slate-100 hover:bg-slate-200'
                       }`}
                       style={{ height: `${heightPct}%` }}
                     />
-                    <span className="text-xs text-muted-foreground">{item.month}</span>
+                    {item.gain > 0 && (
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap rounded-lg bg-slate-900 px-2 py-1 text-xs text-white">
+                        {formatBRL(item.gain)}
+                      </div>
+                    )}
                   </div>
-                )
-              })}
-            </div>
-            <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/70" /> Tributável
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted/40" /> Isento / Sem vendas
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+                  <span className="text-xs text-slate-400">{item.month}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4 flex gap-5 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-sm bg-indigo-500" />
+              Tributável
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-sm bg-slate-100 border border-slate-200" />
+              Isento / Sem vendas
+            </span>
+          </div>
+        </div>
 
         {/* DARFs Summary */}
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="text-base">DARFs 2025</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900">DARFs 2025</h3>
+            <Link href="/dashboard/darf">
+              <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-50 text-xs">
+                Ver todos →
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
             {mockDARFs.map((darf) => (
               <div
                 key={darf.id}
-                className="flex items-center justify-between rounded-lg border border-border/50 p-3"
+                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3"
               >
                 <div>
-                  <p className="text-sm font-medium">{darf.competencia}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-semibold text-slate-900">{darf.competencia}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Vence: {format(darf.dueDate, 'dd/MM/yyyy', { locale: ptBR })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold">{formatBRL(darf.amount)}</p>
-                  <Badge
-                    variant="outline"
-                    className={
+                  <p className="text-sm font-bold text-slate-900 font-mono">{formatBRL(darf.amount)}</p>
+                  <span
+                    className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                       darf.status === 'paid'
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs'
+                        ? 'bg-emerald-100 text-emerald-700'
                         : darf.status === 'overdue'
-                        ? 'border-red-500/30 bg-red-500/10 text-red-400 text-xs'
-                        : 'border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs'
-                    }
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}
                   >
-                    {darf.status === 'paid' ? 'Pago' : darf.status === 'overdue' ? 'Atrasado' : 'Pendente'}
-                  </Badge>
+                    {darf.status === 'paid' ? '✅ Pago' : darf.status === 'overdue' ? '❌ Atrasado' : '⏳ Pendente'}
+                  </span>
                 </div>
               </div>
             ))}
-            <Link href="/dashboard/darf">
-              <Button variant="outline" size="sm" className="w-full">
-                Ver todos os DARFs
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Recent Transactions */}
-      <Card className="border-border/50 bg-card/50">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Transações Recentes</CardTitle>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-100 p-6">
+          <h3 className="font-semibold text-slate-900">Transações Recentes</h3>
           <Link href="/dashboard/transacoes">
-            <Button variant="ghost" size="sm" className="gap-1 text-primary">
-              Ver todas <ArrowUpRight className="h-3 w-3" />
+            <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 text-sm">
+              Ver todas
+              <ArrowUpRight className="h-3 w-3" />
             </Button>
           </Link>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/50">
-                <TableHead>Data</TableHead>
-                <TableHead>Exchange</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Ativo</TableHead>
-                <TableHead className="text-right">Quantidade</TableHead>
-                <TableHead className="text-right">Total (R$)</TableHead>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-slate-100 bg-slate-50">
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Exchange</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tipo</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ativo</TableHead>
+              <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Qtd</TableHead>
+              <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Total (R$)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {recentTransactions.map((tx) => (
+              <TableRow key={tx.id} className="border-slate-100 hover:bg-slate-50 transition-colors">
+                <TableCell className="text-sm text-slate-500">
+                  {format(tx.date, 'dd/MM/yyyy', { locale: ptBR })}
+                </TableCell>
+                <TableCell className="text-sm font-medium text-slate-700">{tx.exchange}</TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      tx.type === 'sell'
+                        ? 'bg-rose-100 text-rose-700'
+                        : tx.type === 'buy'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {tx.type === 'sell' ? (
+                      <ArrowDownRight className="h-3 w-3" />
+                    ) : (
+                      <ArrowUpRight className="h-3 w-3" />
+                    )}
+                    {TYPE_LABELS[tx.type] ?? tx.type}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-block rounded-lg px-2.5 py-0.5 text-xs font-mono font-bold ${
+                      ASSET_COLORS[tx.asset] ?? 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {tx.asset}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right text-sm font-mono text-slate-700">
+                  {tx.amount.toFixed(4)}
+                </TableCell>
+                <TableCell className="text-right text-sm font-bold font-mono text-slate-900">
+                  {formatBRL(tx.totalBRL)}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentTransactions.map((tx) => (
-                <TableRow key={tx.id} className="border-border/50">
-                  <TableCell className="text-sm text-muted-foreground">
-                    {format(tx.date, 'dd/MM/yyyy', { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="text-sm">{tx.exchange}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      {tx.type === 'sell' ? (
-                        <ArrowDownRight className="h-3.5 w-3.5 text-red-400" />
-                      ) : (
-                        <ArrowUpRight className="h-3.5 w-3.5 text-emerald-400" />
-                      )}
-                      <span className={`text-sm ${tx.type === 'sell' ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {TYPE_LABELS[tx.type] ?? tx.type}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="border-border/50 text-xs font-mono">
-                      {tx.asset}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-mono">
-                    {tx.amount.toFixed(4)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-semibold">
-                    {formatBRL(tx.totalBRL)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }
