@@ -61,11 +61,12 @@ Ferramenta SaaS que importa transações de exchanges e wallets, calcula ganho d
 
 ### Tech Stack:
 - **Frontend:** Next.js 15 + Tailwind CSS + shadcn/ui
-- **Backend:** Next.js API routes (monolito pra começar)
-- **Database:** PostgreSQL (Supabase free tier)
-- **Auth:** NextAuth.js + Google/email
-- **Deploy:** Vercel (free tier pra MVP)
+- **Backend:** Next.js API routes (monolito pra começar) → migrar pra Lambda depois
+- **Database:** DynamoDB (AWS, profile nexbo)
+- **Auth:** NextAuth.js + AWS Cognito
+- **Deploy:** AWS Amplify (profile nexbo, region us-east-2)
 - **Parsing:** Papa Parse (CSV) + custom parsers por exchange
+- **AWS Profile:** nexbo (mesma infra do TriboVip)
 
 ### Páginas MVP:
 ```

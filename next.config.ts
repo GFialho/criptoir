@@ -1,7 +1,13 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // Amplify deploy: output standalone para menor bundle
+  // output: 'standalone', // descomente antes do deploy Amplify
 
-export default nextConfig;
+  // Suprimir warning de workspace root
+  turbopack: {
+    root: __dirname,
+  },
+}
+
+export default nextConfig
